@@ -1,0 +1,144 @@
+create procedure B(IN roll_new int,IN book_name varchar(20))
+ begin
+ declare X integer;
+ select datediff(curdate(),doi) into X from borrower 
+where rollin=roll_new;
+ if (X>15&&X<30)
+ then
+ insert into fine values(roll_new,curdate(),(X*5));
+ end if;
+  if (X>30)
+then
+ insert into fine values(roll_new,curdate(),(X*50));
+  end if;
+ update borrower set status='returned' where 
+rollin=roll_new;
+  end;
+  
+  
+  
+  
+  
+  CREATE PROCEDURE merge_data(IN p_roll_no INT)
+BEGIN
+  DECLARE v_roll_no INT;
+  DECLARE v_name VARCHAR(50);
+  DECLARE v_address VARCHAR(50);
+
+  DECLARE cur CURSOR FOR
+    SELECT roll_no, name, address
+    FROM n_rollcall
+    WHERE roll_no = p_roll_no;
+
+  OPEN cur;
+
+  read_loop: LOOP
+    FETCH cur INTO v_roll_no, v_name, v_address;
+
+    IF v_roll_no IS NULL THEN
+      LEAVE read_loop;
+    END IF;
+
+    -- Check if the data already exists in o_rollcall
+    SELECT roll_no INTO v_roll_no
+    FROM o_rollcall
+    WHERE roll_no = v_roll_no;
+
+    -- If data already exists, skip to the next record
+    IF v_roll_no IS NOT NULL THEN
+      ITERATE read_loop;
+    END IF;
+
+    -- Insert the record from n_rollcall into o_rollcall
+    INSERT INTO o_rollcall (roll_no, name, address)
+    VALUES (v_roll_no, v_name, v_address);
+
+  END LOOP;
+
+  CLOSE cur;
+  
+  SELECT 'Merge process completed successfully.' AS message;
+
+END;
+ 
+ 
+ 
+ 
+ 
+ 
+ DELIMITER //
+
+CREATE PROCEDURE proc_Grade(
+    IN p_name VARCHAR(50),
+    IN p_total_marks INT,
+    OUT p_roll INT,
+    OUT p_class VARCHAR(20)
+)
+BEGIN
+    IF p_total_marks <= 1500 AND p_total_marks >= 990 THEN
+        SET p_class = 'Distinction';
+    ELSEIF p_total_marks <= 989 AND p_total_marks >= 900 THEN
+        SET p_class = 'First Class';
+    ELSEIF p_total_marks <= 899 AND p_total_marks >= 825 THEN
+        SET p_class = 'Higher Second Class';
+    ELSE
+        SET p_class = 'Unknown';
+    END IF;
+
+    -- Assuming you have a table named 'Result' with columns: Roll, Name, Class
+    INSERT INTO Result (rollno,Name, Class)
+    VALUES (p_roll, p_name, p_class);
+
+    
+END //
+
+DELIMITER ;
+
+
+
+DELIMITER //
+
+CREATE TRIGGER library_after_insert
+AFTER INSERT ON borrower2
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit1 (rollno, name, doi, bname, status )
+    VALUES (NEW.rollno, NEW.name, NEW.doi, NEW.bname, NEW.status);
+END //
+
+DELIMITER ;
+
+
+
+
+
+
+
+use xyz;
+db.createCollection('student')
+show collections;
+
+//CREATE OPEARTION
+
+db.student. insertOne({id:01, sname:'isha',addr:'kop'});
+db.student. insertMany([{id :02,sname:'sakshi',addr:'kop'},{id:3,sname:'prachi',addr:'pune'}]);
+
+db.student. find().pretty();
+ 
+//READ OPEARTION
+db.student.find().pretty();
+db.student.find({'sname':'isha'});
+
+//UPDATE OPERATION
+db.student.updateOne({sname:'isha'},{$set:{'addr':'pune'}});
+db.student.find().pretty();
+
+db.student.updateMany({addr:'kop'},{$set:{name:'prachi'}});
+db.student.find().pretty();
+
+//DELETE OPERATION
+db.student.deleteOne({sname:'prachi'});
+db.student.find().pretty();
+
+db.student.deleteMany({sname:'isha'});
+db.student.find().pretty();
